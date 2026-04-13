@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "wathed_tweaks",
-  "version": "1.0.0",
+  "version": "${version}",
   "name": "Wathed Tweaks",
   "description": "Configurable room key count addon for Wathe",
   "authors": ["Texbio"],
