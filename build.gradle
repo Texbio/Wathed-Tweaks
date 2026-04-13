@@ -1,82 +1,44 @@
 plugins {
-    id 'eclipse'
-    id 'idea'
-    id 'net.minecraftforge.gradle' version '6.0.+'
-    id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
+    id 'fabric-loom' version '1.13-SNAPSHOT'
 }
 
-version = mod_version
-group = mod_group
+version = project.mod_version
+group = project.maven_group
 
 base {
-    archivesName = mod_id
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-minecraft {
-    mappings channel: mapping_channel, version: mapping_version
-
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
+    archivesName = project.archives_base_name
 }
 
 repositories {
     maven {
-        name = "Modmaven"
-        url = "https://modmaven.dev/"
+        name "Modrinth"
+        url "https://api.modrinth.com/maven"
+        content { includeGroup "maven.modrinth" }
     }
-    maven {
-        name = "CurseMaven"
-        url = "https://cursemaven.com"
-        content {
-            includeGroup "curse.maven"
-        }
-    }
-    mavenCentral()
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // AE2 API - compile against
-    compileOnly "appeng:appliedenergistics2-forge:${ae2_version}:api"
-    // AE2 full jar - for mixins and runtime
-    runtimeOnly "appeng:appliedenergistics2-forge:${ae2_version}"
-    compileOnly "appeng:appliedenergistics2-forge:${ae2_version}"
-
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    modCompileOnly "maven.modrinth:wathe:3Kw6IUoN"
 }
 
-mixin {
-    add sourceSets.main, "${mod_id}.refmap.json"
-    config "${mod_id}.mixins.json"
-}
-
-jar {
-    manifest {
-        attributes([
-                "Specification-Title"     : mod_name,
-                "Specification-Vendor"    : mod_authors,
-                "Specification-Version"   : "1",
-                "Implementation-Title"    : mod_name,
-                "Implementation-Version"  : mod_version,
-                "Implementation-Vendor"   : mod_authors,
-                "MixinConfigs"            : "${mod_id}.mixins.json"
-        ])
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
     }
 }
 
-jar.finalizedBy('reobfJar')
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
